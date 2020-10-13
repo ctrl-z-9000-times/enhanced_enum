@@ -1,0 +1,17 @@
+[package]
+name = "enhanced_enum"
+version = "0.1.0"
+authors = ["David McDougall <dam1784@rit.edu>"]
+edition = "2018"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/ctrl-z-9000-times/enhanced_enum.git"
+categories = ["rust-patterns", "data-structures"]
+keywords = ["enum", "array"]
+description = "Enhanced Fieldless Enumerations and Associated Array Types."
+
+[lib]
+name = "enhanced_enum"
+crate-type = ["lib"]
+
+[dependencies]
+paste = "1"
