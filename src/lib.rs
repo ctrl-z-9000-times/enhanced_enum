@@ -115,76 +115,76 @@ macro_rules! enhanced_enum {
 
         impl $name {
             /// Number of variants in this enumeration.
-            pub const fn count() -> usize {enhanced_enum::count!($($variants)*)}
+            pub const fn count() -> ::std::primitive::usize {$crate::count!($($variants)*)}
 
             /// Number of variants in this enumeration.
-            pub const fn len() -> usize { $name::count() }
+            pub const fn len() -> ::std::primitive::usize { $name::count() }
 
-            pub const fn is_empty() -> bool { $name::len() == 0 }
+            pub const fn is_empty() -> ::std::primitive::bool { $name::len() == 0 }
 
             /// Iterate over all variants in this enum, in sorted order.
-            pub fn iter() -> impl std::iter::Iterator<Item=$name> {
+            pub fn iter() -> impl ::std::iter::Iterator<Item=Self> {
                 (0..Self::count()).map(|x| match x {
-                    $( _ if x == $name::$variants as usize => $name::$variants, )*
-                    _ => panic!()
+                    $( _ if x == Self::$variants as ::std::primitive::usize => Self::$variants, )*
+                    _ => ::std::panic!()
                 })
             }
 
-            pub fn to_str(&self) -> &'static str {
+            pub fn to_str(&self) -> &'static ::std::primitive::str {
                 match self {
-                    $( $name::$variants => stringify!($variants), )*
+                    $( Self::$variants => stringify!($variants), )*
                 }
             }
         }
 
-        impl std::fmt::Display for $name {
-            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        impl ::std::fmt::Display for $name {
+            fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
                 write!(f, "{:?}", self)
             }
         }
 
-        impl std::convert::TryFrom<u32> for $name {
+        impl ::std::convert::TryFrom<::std::primitive::u32> for $name {
             type Error = &'static str;
-            fn try_from(value: u32) -> Result<Self, Self::Error> {
-                if cfg!(debug_assertions) && u32::try_from($name::count() - 1).is_err() {
-                    panic!("Too many enum variants to fit inside a u32!");
+            fn try_from(value: ::std::primitive::u32) -> ::std::result::Result<Self, Self::Error> {
+                if cfg!(debug_assertions) && ::std::primitive::u32::try_from(Self::count() - 1).is_err() {
+                    ::std::panic!("Too many enum variants to fit inside a u32!");
                 }
                 match value {
-                    $( _ if value == $name::$variants as u32 => Ok($name::$variants), )*
+                    $( _ if value == Self::$variants as ::std::primitive::u32 => Ok(Self::$variants), )*
                     _ => Err("Bad enum discriminant!")
                 }
             }
         }
 
-        impl std::convert::TryFrom<u64> for $name {
+        impl ::std::convert::TryFrom<::std::primitive::u64> for $name {
             type Error = &'static str;
-            fn try_from(value: u64) -> Result<Self, Self::Error> {
-                let value = u32::try_from(value).unwrap();
-                $name::try_from(value)
+            fn try_from(value: ::std::primitive::u64) -> ::std::result::Result<Self, Self::Error> {
+                let value = ::std::primitive::u32::try_from(value).unwrap();
+                Self::try_from(value)
             }
         }
 
-        impl std::convert::TryFrom<usize> for $name {
+        impl ::std::convert::TryFrom<::std::primitive::usize> for $name {
             type Error = &'static str;
-            fn try_from(value: usize) -> Result<Self, Self::Error> {
-                let value = u32::try_from(value).unwrap();
-                $name::try_from(value)
+            fn try_from(value: ::std::primitive::usize) -> ::std::result::Result<Self, Self::Error> {
+                let value = ::std::primitive::u32::try_from(value).unwrap();
+                Self::try_from(value)
             }
         }
 
-        impl std::convert::TryFrom<&str> for $name {
+        impl ::std::convert::TryFrom<&str> for $name {
             type Error = &'static str;
-            fn try_from(value: &str) -> Result<Self, Self::Error> {
+            fn try_from(value: &str) -> ::std::result::Result<Self, Self::Error> {
                 match value {
-                    $( _ if value == $name::$variants.to_string() => Ok($name::$variants), )*
+                    $( _ if value == Self::$variants.to_string() => Ok(Self::$variants), )*
                     _ => Err("Unrecognized variant name!")
                 }
             }
         }
 
-        enhanced_enum::pyo3_traits!($name, {$($variants,)*});
+        $crate::pyo3_traits!($name, {$($variants,)*});
 
-        enhanced_enum::paste::paste! {
+        $crate::paste::paste! {
             /// Container to associate each enum variant with a datum.
             ///
             /// This is an array type and it implements much of the array API,
@@ -206,8 +206,8 @@ macro_rules! enhanced_enum {
                 pub fn new_with<F>(initial_value: F) -> Self
                     where F: Fn($name) -> T
                 {
-                    use std::convert::TryFrom;
-                    use std::mem::{MaybeUninit, forget, replace};
+                    use ::std::convert::TryFrom;
+                    use ::std::mem::{MaybeUninit, forget, replace};
                     let mut data: [T; $name::count()] = unsafe {
                         MaybeUninit::uninit().assume_init()
                     };
@@ -217,27 +217,27 @@ macro_rules! enhanced_enum {
                     return Self { data };
                 }
 
-                pub const fn len(&self) -> usize { $name::count() }
+                pub const fn len(&self) -> ::std::primitive::usize { $name::count() }
 
-                pub const fn is_empty(&self) -> bool { self.len() == 0 }
+                pub const fn is_empty(&self) -> ::std::primitive::bool { self.len() == 0 }
 
-                pub fn iter<'a>(&'a self) -> impl std::iter::Iterator<Item=&T> {
+                pub fn iter<'a>(&'a self) -> impl ::std::iter::Iterator<Item=&T> {
                     self.data.iter()
                 }
 
-                pub fn iter_mut<'a>(&'a mut self) -> impl std::iter::Iterator<Item=&mut T> {
+                pub fn iter_mut<'a>(&'a mut self) -> impl ::std::iter::Iterator<Item=&mut T> {
                     self.data.iter_mut()
                 }
 
                 /// Iterate and Enumerate, where Enumerate yields enum variants instead of usize.
-                pub fn iter_enumerate<'a>(&'a self) -> impl std::iter::Iterator<Item=($name, &T)> {
-                    use std::convert::TryFrom;
+                pub fn iter_enumerate<'a>(&'a self) -> impl ::std::iter::Iterator<Item=($name, &T)> {
+                    use ::std::convert::TryFrom;
                     self.data.iter().enumerate().map(|(idx, v)| ($name::try_from(idx).unwrap(),v))
                 }
 
                 /// Iterate and Enumerate, where Enumerate yields enum variants instead of usize.
-                pub fn iter_mut_enumerate<'a>(&'a mut self) -> impl std::iter::Iterator<Item=($name, &mut T)> {
-                    use std::convert::TryFrom;
+                pub fn iter_mut_enumerate<'a>(&'a mut self) -> impl ::std::iter::Iterator<Item=($name, &mut T)> {
+                    use ::std::convert::TryFrom;
                     self.data.iter_mut().enumerate().map(|(idx, v)| ($name::try_from(idx).unwrap(),v))
                 }
 
@@ -247,44 +247,44 @@ macro_rules! enhanced_enum {
                 }
 
                 /// Returns true if the array contains an element with the given value.
-                pub fn contains(&self, x: &T) -> bool where T: PartialEq<T> {
+                pub fn contains(&self, x: &T) -> ::std::primitive::bool where T: PartialEq<T> {
                     self.data.contains(x)
                 }
             }
 
-            impl<T> std::fmt::Debug for [<$name Array>]<T> where T: std::fmt::Debug {
-                fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            impl<T> ::std::fmt::Debug for [<$name Array>]<T> where T: ::std::fmt::Debug {
+                fn fmt(&self, f: &mut ::std::fmt::Formatter<'_>) -> ::std::fmt::Result {
                     // TODO: Make this pretty. Print the variant names along
                     // side the array contents.
                     self.data.fmt(f)
                 }
             }
 
-            impl<T> std::ops::Index<$name> for [<$name Array>]<T> {
+            impl<T> ::std::ops::Index<$name> for [<$name Array>]<T> {
                 type Output = T;
                 fn index(&self, x: $name) -> &Self::Output {
-                    &self.data[x as usize]
+                    &self.data[x as ::std::primitive::usize]
                 }
             }
 
-            impl<T> std::ops::IndexMut<$name> for [<$name Array>]<T> {
+            impl<T> ::std::ops::IndexMut<$name> for [<$name Array>]<T> {
                 fn index_mut(&mut self, x: $name) -> &mut Self::Output {
-                    &mut self.data[x as usize]
+                    &mut self.data[x as ::std::primitive::usize]
                 }
             }
 
-            impl<'a, T> std::iter::IntoIterator for &'a [<$name Array>]<T> {
+            impl<'a, T> ::std::iter::IntoIterator for &'a [<$name Array>]<T> {
                 type Item = &'a T;
-                type IntoIter = std::slice::Iter<'a, T>;
-                fn into_iter(self) -> std::slice::Iter<'a, T> {
+                type IntoIter = ::std::slice::Iter<'a, T>;
+                fn into_iter(self) -> ::std::slice::Iter<'a, T> {
                     self.data.iter()
                 }
             }
 
-            impl<'a, T> std::iter::IntoIterator for &'a mut [<$name Array>]<T> {
+            impl<'a, T> ::std::iter::IntoIterator for &'a mut [<$name Array>]<T> {
                 type Item = &'a mut T;
-                type IntoIter = std::slice::IterMut<'a, T>;
-                fn into_iter(self) -> std::slice::IterMut<'a, T> {
+                type IntoIter = ::std::slice::IterMut<'a, T>;
+                fn into_iter(self) -> ::std::slice::IterMut<'a, T> {
                     self.data.iter_mut()
                 }
             }
@@ -306,19 +306,19 @@ macro_rules! enhanced_enum {
             impl<T> Eq for [<$name Array>]<T> where T: Eq {}
 
             impl<T> PartialOrd for [<$name Array>]<T> where T: PartialOrd {
-                fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+                fn partial_cmp(&self, other: &Self) -> Option<::std::cmp::Ordering> {
                     self.data.partial_cmp(&other.data)
                 }
             }
 
             impl<T> Ord for [<$name Array>]<T> where T: Ord {
-                fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+                fn cmp(&self, other: &Self) -> ::std::cmp::Ordering {
                     self.data.cmp(&other.data)
                 }
             }
 
-            impl<T> std::hash::Hash for [<$name Array>]<T> where T: std::hash::Hash {
-                fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            impl<T> ::std::hash::Hash for [<$name Array>]<T> where T: ::std::hash::Hash {
+                fn hash<H: ::std::hash::Hasher>(&self, state: &mut H) {
                     self.data.hash(state);
                 }
             }
@@ -333,7 +333,7 @@ pub use paste;
 #[macro_export]
 macro_rules! count {
     () => (0_usize);
-    ( $x:ident $($xs:ident)* ) => (1_usize + enhanced_enum::count!($($xs)*));
+    ( $x:ident $($xs:ident)* ) => (1_usize + $crate::count!($($xs)*));
 }
 
 #[cfg(not(feature = "pyo3"))]
@@ -347,12 +347,12 @@ macro_rules! pyo3_traits {
 #[macro_export]
 macro_rules! pyo3_traits {
     ($name:ident $(,)? {$($variants:ident$(,)?)*}) => {
-        impl pyo3::conversion::FromPyObject<'_> for $name {
-            fn extract(obj: &pyo3::PyAny) -> std::result::Result<Self, pyo3::PyErr> {
-                let string: String = obj.extract()?;
+        impl ::pyo3::conversion::FromPyObject<'_> for $name {
+            fn extract(obj: &::pyo3::PyAny) -> ::std::result::Result<Self, ::pyo3::PyErr> {
+                let string: ::std::string::String = obj.extract()?;
                 use std::convert::TryFrom;
                 return Ok($name::try_from(string.as_str()).map_err(|err| {
-                    pyo3::PyErr::new::<pyo3::exceptions::PyTypeError, _>(err.to_string())
+                    ::pyo3::PyErr::new::<::pyo3::exceptions::PyTypeError, _>(err.to_string())
                 })?);
             }
         }
