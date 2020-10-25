@@ -1,6 +1,6 @@
 [package]
 name = "enhanced_enum"
-version = "0.2.1"
+version = "0.2.2"
 authors = ["David McDougall <dam1784@rit.edu>"]
 edition = "2018"
 license = "MIT OR Apache-2.0"

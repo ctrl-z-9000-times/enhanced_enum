@@ -322,6 +322,12 @@ macro_rules! enhanced_enum {
                     self.data.hash(state);
                 }
             }
+
+            impl<T> ::std::default::Default for [<$name Array>]<T> where T: ::std::default::Default {
+                fn default() -> Self {
+                    Self::new_with(|_| T::default())
+                }
+            }
         }
     }
 }
